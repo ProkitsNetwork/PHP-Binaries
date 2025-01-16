@@ -610,9 +610,9 @@ append-file-utf8 "extension=php_recursionguard.dll" $php_ini
 append-file-utf8 "recursionguard.enabled=0 ;disabled due to minor performance impact, only enable this if you need it for debugging" $php_ini
 append-file-utf8 ";extension=php_arraydebug.dll" $php_ini
 append-file-utf8 "" $php_ini
-if ($PHP_JIT_ENABLE_ARG -eq "on") {
+if ($PHP_JIT_ENABLE_ARG -eq "yes") {
     append-file-utf8 "; ---- ! WARNING ! ----" $php_ini
-    append-file-utf8 "; JIT can provide big performance improvements, but as of PHP %PHP_VER% it is still unstable. For this reason, it is disabled by default." $php_ini
+    append-file-utf8 "; JIT can provide big performance improvements, but as of PHP $PHP_VER it is still unstable. For this reason, it is disabled by default." $php_ini
     append-file-utf8 "; Enable it at your own risk. See https://www.php.net/manual/en/opcache.configuration.php#ini.opcache.jit for possible options." $php_ini
     append-file-utf8 "opcache.jit=off" $php_ini
     append-file-utf8 "opcache.jit_buffer_size=128M" $php_ini
