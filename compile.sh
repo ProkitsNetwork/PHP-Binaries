@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-PHP_VERSIONS=("8.2.27" "8.3.15")
+PHP_VERSIONS=("8.2.27" "8.3.15" "8.4.3")
 
 #### NOTE: Tags with "v" prefixes behave weirdly in the GitHub API. They'll be stripped in some places but not others.
 #### Use commit hashes to avoid this.
@@ -19,13 +19,13 @@ SQLITE3_VERSION="3450200" #3.45.2
 LIBDEFLATE_VERSION="78051988f96dc8d8916310d8b24021f01bd9e102" #1.23 - see above note about "v" prefixes
 LIBFFI_VERSION="3d0ce1e6fcf19f853894862abcbac0ae78a7be60" #3.4.6
 
-EXT_PMMPTHREAD_VERSION="6.1.0"
+EXT_PMMPTHREAD_VERSION="2d0d49f381f58769e8a2c3bc1e4fd4efbaa228a2"
 EXT_YAML_VERSION="2.2.4"
 EXT_LEVELDB_VERSION="317fdcd8415e1566fc2835ce2bdb8e19b890f9f3" #release not tagged
 EXT_CHUNKUTILS2_VERSION="0.3.5"
 EXT_XDEBUG_VERSION="3.3.2"
 EXT_IGBINARY_VERSION="3.2.16"
-EXT_CRYPTO_VERSION="abbe7cbf869f96e69f2ce897271a61d32f43c7c0" #release not tagged
+EXT_CRYPTO_VERSION="4516e22160a32ea09b2e547ceebd9a009fc6b597" #release not tagged
 EXT_RECURSIONGUARD_VERSION="0.1.0"
 EXT_LIBDEFLATE_VERSION="0.2.1"
 EXT_MORTON_VERSION="0.1.2"
@@ -290,7 +290,7 @@ done
 
 if [ "$PHP_VERSION" == "" ]; then
 	write_error "Unsupported PHP base version $PHP_VERSION_BASE"
-	write_error "Example inputs: 8.2, 8.3"
+	write_error "Example inputs: 8.2, 8.3, 8.4"
 	exit 1
 fi
 
@@ -1141,7 +1141,7 @@ get_github_extension "igbinary" "$EXT_IGBINARY_VERSION" "igbinary" "igbinary"
 get_github_extension "recursionguard" "$EXT_RECURSIONGUARD_VERSION" "pmmp" "ext-recursionguard"
 
 echo -n "  crypto: downloading $EXT_CRYPTO_VERSION..."
-git clone https://github.com/bukka/php-crypto.git "$BUILD_DIR/php/ext/crypto" >> "$DIR/install.log" 2>&1
+git clone https://github.com/remicollet/php-crypto.git "$BUILD_DIR/php/ext/crypto" >> "$DIR/install.log" 2>&1
 cd "$BUILD_DIR/php/ext/crypto"
 git checkout "$EXT_CRYPTO_VERSION" >> "$DIR/install.log" 2>&1
 git submodule update --init --recursive >> "$DIR/install.log" 2>&1
@@ -1385,31 +1385,6 @@ if [ "$COMPILE_TARGET" == "mac-"* ]; then
 fi
 
 write_done
-
-if [[ "$HAVE_XDEBUG" == "yes" ]]; then
-	get_github_extension "xdebug" "$EXT_XDEBUG_VERSION" "xdebug" "xdebug"
-	write_library "xdebug" "$EXT_XDEBUG_VERSION"
-	cd "$BUILD_DIR/php/ext/xdebug"
-	write_configure
-	"$INSTALL_DIR/bin/phpize" >> "$DIR/install.log" 2>&1
-	./configure --with-php-config="$INSTALL_DIR/bin/php-config" >> "$DIR/install.log" 2>&1
-	write_compile
-	make -j4 >> "$DIR/install.log" 2>&1
-	write_install
-	make install >> "$DIR/install.log" 2>&1
-	echo "" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo ";WARNING: When loaded, xdebug 3.2.0 will cause segfaults whenever an uncaught error is thrown, even if xdebug.mode=off. Load it at your own risk." >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo ";zend_extension=xdebug.so" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo ";https://xdebug.org/docs/all_settings#mode" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo "xdebug.mode=off" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo "xdebug.start_with_request=yes" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo ";The following overrides allow profiler, gc stats and traces to work correctly in ZTS" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo "xdebug.profiler_output_name=cachegrind.%s.%p.%r" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo "xdebug.gc_stats_output_name=gcstats.%s.%p.%r" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	echo "xdebug.trace_output_name=trace.%s.%p.%r" >> "$INSTALL_DIR/bin/php.ini" 2>&1
-	write_done
-	write_out INFO "Xdebug is included, but disabled by default. To enable it, change 'xdebug.mode' in your php.ini file."
-fi
 
 function separate_symbols {
 	local libname="$1"
