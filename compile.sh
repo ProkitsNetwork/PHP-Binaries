@@ -17,6 +17,7 @@ OPENSSL_VERSION="3.4.0"
 LIBZIP_VERSION="1.10.1"
 SQLITE3_VERSION="3450200" #3.45.2
 LIBDEFLATE_VERSION="78051988f96dc8d8916310d8b24021f01bd9e102" #1.23 - see above note about "v" prefixes
+LIBFFI_VERSION="3d0ce1e6fcf19f853894862abcbac0ae78a7be60" #3.4.6
 
 EXT_PMMPTHREAD_VERSION="6.1.0"
 EXT_YAML_VERSION="2.2.4"
@@ -1037,6 +1038,43 @@ function build_libdeflate {
 	write_done
 }
 
+function build_libffi {
+	write_library libffi "$LIBFFI_VERSION"
+	local libffi_dir="./libffi-$LIBFFI_VERSION"
+	if cant_use_cache "$libffi_dir"; then
+		rm -rf "$libffi_dir"
+		write_download
+		download_github_src "libffi/libffi" "$LIBFFI_VERSION" "libffi" | tar -zx >> "$DIR/install.log" 2>&1
+		write_configure
+		cd "$libffi_dir"
+		if [ "$DO_STATIC" == "yes" ]; then
+			local EXTRA_FLAGS="--enable-shared=no --enable-static=yes"
+		else
+			local EXTRA_FLAGS="--enable-shared=yes --enable-static=no"
+		fi
+		./autogen.sh --prefix="$INSTALL_DIR" \
+			--config-cache \
+			$EXTRA_FLAGS \
+			$CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
+
+		write_compile
+
+		LDFLAGS="$LDFLAGS -L${INSTALL_DIR}/lib" CPPFLAGS="$CPPFLAGS -I${INSTALL_DIR}/include" RANLIB=$RANLIB ./configure \
+      		--prefix="$INSTALL_DIR" \
+      		$EXTRA_FLAGS \
+      		$CONFIGURE_FLAGS >> "$DIR/install.log" 2>&1
+
+		make -j $THREADS >> "$DIR/install.log" 2>&1 && mark_cache
+	else
+		write_caching
+		cd "$libffi_dir"
+	fi
+	write_install
+	make install >> "$DIR/install.log" 2>&1
+	cd ..
+	write_done
+}
+
 cd "$LIB_BUILD_DIR"
 
 build_zlib
@@ -1059,6 +1097,7 @@ build_libxml2
 build_libzip
 build_sqlite3
 build_libdeflate
+build_libffi
 
 # PECL libraries
 
@@ -1213,6 +1252,7 @@ $HAS_DEBUG \
 --disable-mbregex \
 --enable-calendar \
 --enable-pmmpthread \
+--with-ffi \
 --enable-fileinfo \
 --with-libxml \
 --enable-xml \
