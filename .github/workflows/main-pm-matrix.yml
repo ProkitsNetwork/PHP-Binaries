@@ -49,7 +49,7 @@ jobs:
           # Used "set -ex" instead of hashbang since script isn't executed with hashbang
           set -ex
           trap "exit 1" ERR
-          ./compile.sh -t linux64 -j 4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -D -z ${{ inputs.php-version-base }} -J
+          ./compile.sh -t linux64 -j 4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -l ./download_cache -D -z ${{ inputs.php-version-base }} -J
 
       - name: Create tarball
         run: |
@@ -115,7 +115,7 @@ jobs:
           export PATH="/usr/local/opt/bison/bin:$PATH"
           set -ex
           trap "exit 1" ERR
-          ./compile.sh -t ${{ matrix.target-name }} -j4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -D -z ${{ inputs.php-version-base }} -J
+          ./compile.sh -t ${{ matrix.target-name }} -j4 -g -P ${{ inputs.pm-version-major }} -c ./download_cache -l ./download_cache -D -z ${{ inputs.php-version-base }} -J
           
       - name: Create tarball
         run: |
