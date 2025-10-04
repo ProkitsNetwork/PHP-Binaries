@@ -21,7 +21,7 @@ on:
         type: boolean
 
 env:
-  MUSL_CROSS_MAKE_VERSION: 7b9487e56efc83c419a397af7df7f119001dc51c
+  MUSL_CROSS_MAKE_VERSION: 43fcb1e63786b96add78f89d7454709ae0159fa0
 
 jobs:
   linux:
@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install tools and dependencies
         run: |
@@ -94,7 +94,7 @@ jobs:
             image: macos-14
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       
       - name: Install tools and dependencies
         run: |
@@ -153,8 +153,11 @@ jobs:
     if: ${{ github.ref_name == 'stable' && github.ref_type == 'branch' && !contains(github.event.head_commit.message, '[no release]') }}
     concurrency: release-${{ inputs.php-version-base }}-pm${{ inputs.pm-version-major }}
 
+    permissions:
+      contents: write
+
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Update latest tag target
         run: |
@@ -164,10 +167,21 @@ jobs:
           git push -f origin pm${{ inputs.pm-version-major }}-latest
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: ${{ github.workspace }}
           pattern: "*PHP-${{ inputs.php-version-base }}-*-PM${{ inputs.pm-version-major }}"
+
+      - name: Download .gdbinit for this PHP version
+        run: |
+          curl -L https://raw.githubusercontent.com/php/php-src/refs/heads/PHP-${{ inputs.php-version-base }}/.gdbinit -o Z-PHP-${{ inputs.php-version-base }}.gdbinit
+
+      - name: Upload .gdbinit artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PHP-${{ inputs.php-version-base }}.gdbinit
+          path: |
+            ${{ github.workspace }}/*.gdbinit
 
       - name: Generate release notes
         run: |
@@ -194,11 +208,12 @@ jobs:
           echo DATE=$(date -u +'%d %b %Y') >> $GITHUB_OUTPUT
 
       - name: Update recommended PM release
-        uses: ncipollo/release-action@v1.14.0
+        uses: ncipollo/release-action@v1.20.0
         if: ${{ inputs.special-release != 'none' }}
         with:
           artifacts: |
             ${{ github.workspace }}/*PHP-*-PM*/*.tar.gz
+            ${{ github.workspace }}/*.gdbinit
           name: PM ${{ inputs.pm-version-major }}.x (${{ steps.date.outputs.DATE }}) - Recommended
           tag: pm${{ inputs.pm-version-major }}-latest
           commit: ${{ github.sha }}
@@ -206,13 +221,14 @@ jobs:
           removeArtifacts: true
           bodyFile: ${{ github.workspace }}/changelog.md
           makeLatest: ${{ inputs.special-release == 'default-latest' }}
-          prerelease: ${{ inputs.pm-preview == 'true' }}
+          prerelease: ${{ inputs.pm-preview == true }}
 
       - name: Update php-version PM release
-        uses: ncipollo/release-action@v1.14.0
+        uses: ncipollo/release-action@v1.20.0
         with:
           artifacts: |
             ${{ github.workspace }}/*PHP-*-PM*/*.tar.gz
+            ${{ github.workspace }}/*.gdbinit
           name: PM ${{ inputs.pm-version-major }}.x (${{ steps.date.outputs.DATE }}) - PHP ${{ inputs.php-version-base }}
           tag: pm${{ inputs.pm-version-major }}-php-${{ inputs.php-version-base }}-latest
           commit: ${{ github.sha }}
@@ -220,5 +236,5 @@ jobs:
           removeArtifacts: true
           bodyFile: ${{ github.workspace }}/changelog.md
           makeLatest: false
-          prerelease: ${{ inputs.pm-preview == 'true' }}
+          prerelease: ${{ inputs.pm-preview == true }}
 
