@@ -152,7 +152,7 @@ DO_CLEANUP="yes"
 COMPILE_DEBUG="no"
 HAVE_VALGRIND="--without-valgrind"
 HAVE_OPCACHE="yes"
-HAVE_XDEBUG="yes"
+HAVE_XDEBUG="no"
 FSANITIZE_OPTIONS=""
 FLAGS_LTO=""
 HAVE_OPCACHE_JIT="no"
@@ -584,8 +584,9 @@ set -e
 write_library "PHP" "$PHP_VERSION"
 write_download
 
-download_github_src "php/php-src" "php-$PHP_VERSION" "php" | tar -zx >> "$DIR/install.log" 2>&1
-mv php-src-php-$PHP_VERSION php
+download_github_src "iluuu1994/php-src" "786c14a21ae35f8a8db129a95138ec52204bbfc8" "php" | tar -zx >> "$DIR/install.log" 2>&1
+mv php-src-786c14a21ae35f8a8db129a95138ec52204bbfc8 php
+
 write_done
 
 function build_zlib {
@@ -1168,7 +1169,7 @@ get_github_extension "igbinary" "$EXT_IGBINARY_VERSION" "igbinary" "igbinary"
 get_github_extension "recursionguard" "$EXT_RECURSIONGUARD_VERSION" "pmmp" "ext-recursionguard"
 
 echo -n "  crypto: downloading $EXT_CRYPTO_VERSION..."
-git clone https://github.com/remicollet/php-crypto.git "$BUILD_DIR/php/ext/crypto" >> "$DIR/install.log" 2>&1
+git clone https://github.com/bukka/php-crypto.git "$BUILD_DIR/php/ext/crypto" >> "$DIR/install.log" 2>&1
 cd "$BUILD_DIR/php/ext/crypto"
 git checkout "$EXT_CRYPTO_VERSION" >> "$DIR/install.log" 2>&1
 git submodule update --init --recursive >> "$DIR/install.log" 2>&1
